@@ -1,6 +1,6 @@
 //
 // Created by Matthew Abbott 2025
-// C++ Port from Pascal
+// C++ Port from Pascal - COMPLETE IMPLEMENTATION
 //
 
 #include <iostream>
@@ -103,12 +103,9 @@ public:
     double randomDouble();
     
     // Data Handling Functions
-    void loadData(TDataMatrix& inputData, TTargetArray& inputTargets,
-                  int nSamples, int nFeatures);
-    void trainTestSplit(TIndexArray& trainIndices, TIndexArray& testIndices,
-                        int& numTrain, int& numTest, double testRatio);
-    void bootstrap(TIndexArray& sampleIndices, int& numBootstrap,
-                   TBoolArray& oobMask);
+    void loadData(TDataMatrix& inputData, TTargetArray& inputTargets, int nSamples, int nFeatures);
+    void trainTestSplit(TIndexArray& trainIndices, TIndexArray& testIndices, int& numTrain, int& numTest, double testRatio);
+    void bootstrap(TIndexArray& sampleIndices, int& numBootstrap, TBoolArray& oobMask);
     void selectFeatureSubset(TFeatureArray& featureIndices, int& numSelected);
     
     // Decision Tree Functions
@@ -117,16 +114,12 @@ public:
     double calculateMSE(TIndexArray& indices, int numIndices);
     double calculateVariance(TIndexArray& indices, int numIndices);
     double calculateImpurity(TIndexArray& indices, int numIndices);
-    bool findBestSplit(TIndexArray& indices, int numIndices,
-                      TFeatureArray& featureIndices, int nFeatures,
-                      int& bestFeature, double& bestThreshold,
-                      double& bestGain);
+    bool findBestSplit(TIndexArray& indices, int numIndices, TFeatureArray& featureIndices, int nFeatures, int& bestFeature, double& bestThreshold, double& bestGain);
     int getMajorityClass(TIndexArray& indices, int numIndices);
     double getMeanTarget(TIndexArray& indices, int numIndices);
     TreeNode createLeafNode(TIndexArray& indices, int numIndices);
     bool shouldStop(int depth, int numIndices, double impurity);
-    TreeNode buildTree(TIndexArray& indices, int numIndices,
-                      int depth, TDecisionTree tree);
+    TreeNode buildTree(TIndexArray& indices, int numIndices, int depth, TDecisionTree tree);
     double predictTree(TreeNode node, TDataRow& sample);
     void freeTreeNode(TreeNode node);
     void freeTree(TDecisionTree tree);
@@ -138,8 +131,7 @@ public:
     // Random Forest Prediction
     double predict(TDataRow& sample);
     int predictClass(TDataRow& sample);
-    void predictBatch(TDataMatrix& samples, int nSamples,
-                     TTargetArray& predictions);
+    void predictBatch(TDataMatrix& samples, int nSamples, TTargetArray& predictions);
     
     // Out-of-Bag Error
     double calculateOOBError();
@@ -150,18 +142,12 @@ public:
     void printFeatureImportances();
     
     // Performance Metrics
-    double accuracy(TTargetArray& predictions, TTargetArray& actual,
-                   int nSamples);
-    double precision(TTargetArray& predictions, TTargetArray& actual,
-                    int nSamples, int positiveClass);
-    double recall(TTargetArray& predictions, TTargetArray& actual,
-                 int nSamples, int positiveClass);
-    double f1Score(TTargetArray& predictions, TTargetArray& actual,
-                  int nSamples, int positiveClass);
-    double meanSquaredError(TTargetArray& predictions, TTargetArray& actual,
-                           int nSamples);
-    double rSquared(TTargetArray& predictions, TTargetArray& actual,
-                   int nSamples);
+    double accuracy(TTargetArray& predictions, TTargetArray& actual, int nSamples);
+    double precision(TTargetArray& predictions, TTargetArray& actual, int nSamples, int positiveClass);
+    double recall(TTargetArray& predictions, TTargetArray& actual, int nSamples, int positiveClass);
+    double f1Score(TTargetArray& predictions, TTargetArray& actual, int nSamples, int positiveClass);
+    double meanSquaredError(TTargetArray& predictions, TTargetArray& actual, int nSamples);
+    double rSquared(TTargetArray& predictions, TTargetArray& actual, int nSamples);
     
     // Utility
     void printForestInfo();
@@ -172,7 +158,7 @@ public:
     int getNumFeatures() { return numFeatures; }
     int getNumSamples() { return numSamples; }
     int getMaxDepth() { return maxDepth; }
-    TDecisionTree getTree(int treeId) { return trees[treeId]; }
+    TDecisionTree getTree(int treeId) { return treeId >= 0 && treeId < MAX_TREES ? trees[treeId] : nullptr; }
     double getData(int sampleIdx, int featureIdx) { return data[sampleIdx][featureIdx]; }
     double getTarget(int sampleIdx) { return targets[sampleIdx]; }
     TaskType getTaskType() { return taskType; }
@@ -184,7 +170,10 @@ public:
     void retrainTreeAt(int treeId);
 };
 
+// ============================================================================
 // Constructor
+// ============================================================================
+
 TRandomForest::TRandomForest() {
     numTrees = 100;
     maxDepth = MAX_DEPTH_DEFAULT;
@@ -196,17 +185,20 @@ TRandomForest::TRandomForest() {
     taskType = Classification;
     criterion = Gini;
     randomSeed = 42;
-    
+
     for (int i = 0; i < MAX_TREES; i++)
         trees[i] = nullptr;
-    
+
     for (int i = 0; i < MAX_FEATURES; i++)
         featureImportances[i] = 0.0;
-    
+
     srand(static_cast<unsigned int>(time(nullptr)));
 }
 
+// ============================================================================
 // Hyperparameter Handling
+// ============================================================================
+
 void TRandomForest::setNumTrees(int n) {
     if (n > MAX_TREES)
         numTrees = MAX_TREES;
@@ -237,24 +229,15 @@ void TRandomForest::setMinSamplesSplit(int m) {
         minSamplesSplit = m;
 }
 
-void TRandomForest::setMaxFeatures(int m) {
-    maxFeatures = m;
-}
+void TRandomForest::setMaxFeatures(int m) { maxFeatures = m; }
+void TRandomForest::setTaskType(TaskType t) { taskType = t; }
+void TRandomForest::setCriterion(SplitCriterion c) { criterion = c; }
+void TRandomForest::setRandomSeed(long seed) { randomSeed = seed; srand(static_cast<unsigned int>(seed)); }
 
-void TRandomForest::setTaskType(TaskType t) {
-    taskType = t;
-}
-
-void TRandomForest::setCriterion(SplitCriterion c) {
-    criterion = c;
-}
-
-void TRandomForest::setRandomSeed(long seed) {
-    randomSeed = seed;
-    srand(static_cast<unsigned int>(seed));
-}
-
+// ============================================================================
 // Random Number Generator
+// ============================================================================
+
 int TRandomForest::randomInt(int maxVal) {
     if (maxVal <= 0) return 0;
     return rand() % maxVal;
@@ -264,12 +247,14 @@ double TRandomForest::randomDouble() {
     return static_cast<double>(rand()) / RAND_MAX;
 }
 
+// ============================================================================
 // Data Handling Functions
-void TRandomForest::loadData(TDataMatrix& inputData, TTargetArray& inputTargets,
-                              int nSamples, int nFeatures) {
+// ============================================================================
+
+void TRandomForest::loadData(TDataMatrix& inputData, TTargetArray& inputTargets, int nSamples, int nFeatures) {
     numSamples = nSamples;
     numFeatures = nFeatures;
-    
+
     for (int i = 0; i < nSamples; i++) {
         for (int j = 0; j < nFeatures; j++)
             data[i][j] = inputData[i][j];
@@ -277,8 +262,7 @@ void TRandomForest::loadData(TDataMatrix& inputData, TTargetArray& inputTargets,
     }
 }
 
-void TRandomForest::trainTestSplit(TIndexArray& trainIndices, TIndexArray& testIndices,
-                                    int& numTrain, int& numTest, double testRatio) {
+void TRandomForest::trainTestSplit(TIndexArray& trainIndices, TIndexArray& testIndices, int& numTrain, int& numTest, double testRatio) {
     int testSize = static_cast<int>(numSamples * testRatio);
     numTest = testSize;
     numTrain = numSamples - testSize;
@@ -287,7 +271,6 @@ void TRandomForest::trainTestSplit(TIndexArray& trainIndices, TIndexArray& testI
     for (int i = 0; i < numSamples; i++)
         used[i] = false;
     
-    // Select test indices
     for (int i = 0; i < testSize; i++) {
         int idx;
         do {
@@ -297,7 +280,6 @@ void TRandomForest::trainTestSplit(TIndexArray& trainIndices, TIndexArray& testI
         testIndices[i] = idx;
     }
     
-    // Fill remaining with train indices
     int trainIdx = 0;
     for (int i = 0; i < numSamples; i++) {
         if (!used[i]) {
@@ -306,8 +288,7 @@ void TRandomForest::trainTestSplit(TIndexArray& trainIndices, TIndexArray& testI
     }
 }
 
-void TRandomForest::bootstrap(TIndexArray& sampleIndices, int& numBootstrap,
-                               TBoolArray& oobMask) {
+void TRandomForest::bootstrap(TIndexArray& sampleIndices, int& numBootstrap, TBoolArray& oobMask) {
     numBootstrap = numSamples;
     
     for (int i = 0; i < numSamples; i++)
@@ -321,27 +302,34 @@ void TRandomForest::bootstrap(TIndexArray& sampleIndices, int& numBootstrap,
 }
 
 void TRandomForest::selectFeatureSubset(TFeatureArray& featureIndices, int& numSelected) {
-    if (maxFeatures <= 0 || maxFeatures > numFeatures) {
-        numSelected = static_cast<int>(sqrt(numFeatures));
-    } else {
-        numSelected = maxFeatures;
+    int actualMaxFeatures = maxFeatures;
+    if (actualMaxFeatures <= 0 || actualMaxFeatures > numFeatures) {
+        actualMaxFeatures = static_cast<int>(sqrt(numFeatures));
     }
+    if (actualMaxFeatures < 1) actualMaxFeatures = 1;
     
-    TBoolArray used;
+    numSelected = actualMaxFeatures;
+    
+    TFeatureArray available;
     for (int i = 0; i < numFeatures; i++)
-        used[i] = false;
+        available[i] = i;
     
-    for (int i = 0; i < numSelected; i++) {
-        int idx;
-        do {
-            idx = randomInt(numFeatures);
-        } while (used[idx]);
-        used[idx] = true;
-        featureIndices[i] = idx;
+    // Fisher-Yates shuffle
+    for (int i = numFeatures - 1; i >= 1; i--) {
+        int j = randomInt(i + 1);
+        int temp = available[i];
+        available[i] = available[j];
+        available[j] = temp;
     }
+    
+    for (int i = 0; i < numSelected; i++)
+        featureIndices[i] = available[i];
 }
 
-// Decision Tree Functions
+// ============================================================================
+// Decision Tree - Impurity Functions
+// ============================================================================
+
 double TRandomForest::calculateGini(TIndexArray& indices, int numIndices) {
     if (numIndices == 0) return 0.0;
     
@@ -428,10 +416,11 @@ double TRandomForest::calculateImpurity(TIndexArray& indices, int numIndices) {
     }
 }
 
-bool TRandomForest::findBestSplit(TIndexArray& indices, int numIndices,
-                                  TFeatureArray& featureIndices, int nFeatures,
-                                  int& bestFeature, double& bestThreshold,
-                                  double& bestGain) {
+// ============================================================================
+// Decision Tree - Split Functions
+// ============================================================================
+
+bool TRandomForest::findBestSplit(TIndexArray& indices, int numIndices, TFeatureArray& featureIndices, int nFeatures, int& bestFeature, double& bestThreshold, double& bestGain) {
     bestGain = 0.0;
     bestFeature = -1;
     bestThreshold = 0.0;
@@ -442,37 +431,42 @@ bool TRandomForest::findBestSplit(TIndexArray& indices, int numIndices,
     double parentImpurity = calculateImpurity(indices, numIndices);
     
     for (int f = 0; f < nFeatures; f++) {
-        int featureIdx = featureIndices[f];
+        int feat = featureIndices[f];
         
-        // Collect unique thresholds
-        TDoubleArray thresholds;
-        int numThresholds = 0;
+        // Collect and sort feature values
+        TDoubleArray values;
+        TIndexArray sortedIndices;
         for (int i = 0; i < numIndices; i++) {
-            double val = data[indices[i]][featureIdx];
-            bool found = false;
-            for (int j = 0; j < numThresholds; j++) {
-                if (fabs(thresholds[j] - val) < 1e-10) {
-                    found = true;
-                    break;
+            values[i] = data[indices[i]][feat];
+            sortedIndices[i] = i;
+        }
+        
+        // Bubble sort by feature value
+        for (int i = 0; i < numIndices - 1; i++) {
+            for (int j = i + 1; j < numIndices; j++) {
+                if (values[sortedIndices[j]] < values[sortedIndices[i]]) {
+                    int temp = sortedIndices[i];
+                    sortedIndices[i] = sortedIndices[j];
+                    sortedIndices[j] = temp;
                 }
-            }
-            if (!found) {
-                thresholds[numThresholds++] = val;
             }
         }
         
-        // Try splitting on each threshold
-        for (int t = 0; t < numThresholds - 1; t++) {
-            double threshold = (thresholds[t] + thresholds[t + 1]) / 2.0;
+        // Try each split point
+        for (int i = 0; i < numIndices - 1; i++) {
+            if (fabs(values[sortedIndices[i]] - values[sortedIndices[i + 1]]) < 1e-10)
+                continue;
+            
+            double threshold = (values[sortedIndices[i]] + values[sortedIndices[i + 1]]) / 2.0;
             
             TIndexArray leftIndices, rightIndices;
             int numLeft = 0, numRight = 0;
             
-            for (int i = 0; i < numIndices; i++) {
-                if (data[indices[i]][featureIdx] <= threshold) {
-                    leftIndices[numLeft++] = indices[i];
+            for (int j = 0; j < numIndices; j++) {
+                if (data[indices[j]][feat] <= threshold) {
+                    leftIndices[numLeft++] = indices[j];
                 } else {
-                    rightIndices[numRight++] = indices[i];
+                    rightIndices[numRight++] = indices[j];
                 }
             }
             
@@ -485,14 +479,13 @@ bool TRandomForest::findBestSplit(TIndexArray& indices, int numIndices,
             double leftImpurity = calculateImpurity(leftIndices, numLeft);
             double rightImpurity = calculateImpurity(rightIndices, numRight);
             
-            double weightedImpurity = (static_cast<double>(numLeft) / numIndices) * leftImpurity +
-                                     (static_cast<double>(numRight) / numIndices) * rightImpurity;
-            
-            double gain = parentImpurity - weightedImpurity;
+            double gain = parentImpurity - 
+                         (static_cast<double>(numLeft) / numIndices) * leftImpurity - 
+                         (static_cast<double>(numRight) / numIndices) * rightImpurity;
             
             if (gain > bestGain) {
                 bestGain = gain;
-                bestFeature = featureIdx;
+                bestFeature = feat;
                 bestThreshold = threshold;
             }
         }
@@ -500,6 +493,10 @@ bool TRandomForest::findBestSplit(TIndexArray& indices, int numIndices,
     
     return bestGain > 0.0 && bestFeature != -1;
 }
+
+// ============================================================================
+// Decision Tree - Leaf Functions
+// ============================================================================
 
 int TRandomForest::getMajorityClass(TIndexArray& indices, int numIndices) {
     if (numIndices == 0) return 0;
@@ -535,9 +532,12 @@ double TRandomForest::getMeanTarget(TIndexArray& indices, int numIndices) {
 TreeNode TRandomForest::createLeafNode(TIndexArray& indices, int numIndices) {
     TreeNode node = new TreeNodeRec();
     node->isLeaf = true;
+    node->featureIndex = -1;
+    node->threshold = 0.0;
+    node->numSamples = numIndices;
+    node->impurity = calculateImpurity(indices, numIndices);
     node->left = nullptr;
     node->right = nullptr;
-    node->numSamples = numIndices;
     
     if (taskType == Classification) {
         node->classLabel = getMajorityClass(indices, numIndices);
@@ -547,37 +547,45 @@ TreeNode TRandomForest::createLeafNode(TIndexArray& indices, int numIndices) {
         node->classLabel = static_cast<int>(node->prediction);
     }
     
-    node->impurity = calculateImpurity(indices, numIndices);
-    
     return node;
 }
+
+// ============================================================================
+// Decision Tree - Stopping Conditions
+// ============================================================================
 
 bool TRandomForest::shouldStop(int depth, int numIndices, double impurity) {
     if (depth >= maxDepth)
         return true;
     if (numIndices < minSamplesSplit)
         return true;
+    if (numIndices <= minSamplesLeaf)
+        return true;
     if (impurity < 1e-10)
         return true;
     return false;
 }
 
-TreeNode TRandomForest::buildTree(TIndexArray& indices, int numIndices,
-                                  int depth, TDecisionTree tree) {
-    if (shouldStop(depth, numIndices, calculateImpurity(indices, numIndices))) {
+// ============================================================================
+// Decision Tree - Tree Building
+// ============================================================================
+
+TreeNode TRandomForest::buildTree(TIndexArray& indices, int numIndices, int depth, TDecisionTree tree) {
+    double currentImpurity = calculateImpurity(indices, numIndices);
+    
+    if (shouldStop(depth, numIndices, currentImpurity)) {
         return createLeafNode(indices, numIndices);
     }
     
     TFeatureArray featureIndices;
-    int numFeatureIndices = 0;
-    selectFeatureSubset(featureIndices, numFeatureIndices);
+    int numSelectedFeatures = 0;
+    selectFeatureSubset(featureIndices, numSelectedFeatures);
     
     int bestFeature = -1;
     double bestThreshold = 0.0;
     double bestGain = 0.0;
     
-    if (!findBestSplit(indices, numIndices, featureIndices, numFeatureIndices,
-                       bestFeature, bestThreshold, bestGain)) {
+    if (!findBestSplit(indices, numIndices, featureIndices, numSelectedFeatures, bestFeature, bestThreshold, bestGain)) {
         return createLeafNode(indices, numIndices);
     }
     
@@ -597,7 +605,18 @@ TreeNode TRandomForest::buildTree(TIndexArray& indices, int numIndices,
     node->featureIndex = bestFeature;
     node->threshold = bestThreshold;
     node->numSamples = numIndices;
-    node->impurity = calculateImpurity(indices, numIndices);
+    node->impurity = currentImpurity;
+    
+    if (taskType == Classification) {
+        node->classLabel = getMajorityClass(indices, numIndices);
+    } else {
+        node->prediction = getMeanTarget(indices, numIndices);
+    }
+    
+    // Update feature importance
+    featureImportances[bestFeature] += (numIndices * currentImpurity -
+        numLeft * calculateImpurity(leftIndices, numLeft) -
+        numRight * calculateImpurity(rightIndices, numRight));
     
     node->left = buildTree(leftIndices, numLeft, depth + 1, tree);
     node->right = buildTree(rightIndices, numRight, depth + 1, tree);
@@ -605,20 +624,26 @@ TreeNode TRandomForest::buildTree(TIndexArray& indices, int numIndices,
     return node;
 }
 
+// ============================================================================
+// Decision Tree - Prediction
+// ============================================================================
+
 double TRandomForest::predictTree(TreeNode node, TDataRow& sample) {
     if (node == nullptr)
         return 0.0;
     
-    if (node->isLeaf) {
+    if (node->isLeaf)
         return node->prediction;
-    }
     
-    if (sample[node->featureIndex] <= node->threshold) {
+    if (sample[node->featureIndex] <= node->threshold)
         return predictTree(node->left, sample);
-    } else {
+    else
         return predictTree(node->right, sample);
-    }
 }
+
+// ============================================================================
+// Decision Tree - Memory Management
+// ============================================================================
 
 void TRandomForest::freeTreeNode(TreeNode node) {
     if (node == nullptr)
@@ -637,11 +662,18 @@ void TRandomForest::freeTree(TDecisionTree tree) {
     delete tree;
 }
 
-// Random Forest Training
+// ============================================================================
+// Random Forest - Training
+// ============================================================================
+
 void TRandomForest::fit() {
-    for (int i = 0; i < numTrees; i++) {
+    for (int i = 0; i < MAX_FEATURES; i++)
+        featureImportances[i] = 0.0;
+    
+    for (int i = 0; i < numTrees; i++)
         fitTree(i);
-    }
+    
+    calculateFeatureImportance();
 }
 
 void TRandomForest::fitTree(int treeIndex) {
@@ -653,83 +685,152 @@ void TRandomForest::fitTree(int treeIndex) {
     tree->taskType = taskType;
     tree->criterion = criterion;
     
-    TIndexArray bootstrapIndices;
+    TIndexArray sampleIndices;
     int numBootstrap = 0;
     TBoolArray oobMask;
     
-    bootstrap(bootstrapIndices, numBootstrap, oobMask);
+    bootstrap(sampleIndices, numBootstrap, oobMask);
     
+    tree->numOobIndices = 0;
     for (int i = 0; i < numSamples; i++) {
         tree->oobIndices[i] = oobMask[i];
         if (oobMask[i])
             tree->numOobIndices++;
     }
     
-    tree->root = buildTree(bootstrapIndices, numBootstrap, 0, tree);
+    tree->root = buildTree(sampleIndices, numBootstrap, 0, tree);
     
     trees[treeIndex] = tree;
 }
 
-// Random Forest Prediction
+// ============================================================================
+// Random Forest - Prediction
+// ============================================================================
+
 double TRandomForest::predict(TDataRow& sample) {
-    if (numTrees == 0)
-        return 0.0;
-    
-    double sum = 0.0;
-    for (int i = 0; i < numTrees; i++) {
-        if (trees[i] != nullptr) {
-            sum += predictTree(trees[i]->root, sample);
+    if (taskType == Regression) {
+        double sum = 0.0;
+        for (int i = 0; i < numTrees; i++) {
+            if (trees[i] != nullptr)
+                sum += predictTree(trees[i]->root, sample);
         }
+        return sum / numTrees;
+    } else {
+        int votes[100];
+        for (int i = 0; i < 100; i++)
+            votes[i] = 0;
+        
+        for (int i = 0; i < numTrees; i++) {
+            if (trees[i] != nullptr) {
+                int classLabel = static_cast<int>(predictTree(trees[i]->root, sample));
+                if (classLabel >= 0 && classLabel <= 99)
+                    votes[classLabel]++;
+            }
+        }
+        
+        int maxVotes = 0;
+        int maxClass = 0;
+        for (int i = 0; i < 100; i++) {
+            if (votes[i] > maxVotes) {
+                maxVotes = votes[i];
+                maxClass = i;
+            }
+        }
+        
+        return maxClass;
     }
-    
-    return sum / numTrees;
 }
 
 int TRandomForest::predictClass(TDataRow& sample) {
     return static_cast<int>(predict(sample));
 }
 
-void TRandomForest::predictBatch(TDataMatrix& samples, int nSamples,
-                                 TTargetArray& predictions) {
+void TRandomForest::predictBatch(TDataMatrix& samples, int nSamples, TTargetArray& predictions) {
     for (int i = 0; i < nSamples; i++) {
         predictions[i] = predict(samples[i]);
     }
 }
 
+// ============================================================================
 // Out-of-Bag Error
+// ============================================================================
+
 double TRandomForest::calculateOOBError() {
     double totalError = 0.0;
     int totalOob = 0;
     
     for (int i = 0; i < numSamples; i++) {
-        int oobCount = 0;
-        double sum = 0.0;
-        
-        for (int t = 0; t < numTrees; t++) {
-            if (trees[t] != nullptr && trees[t]->oobIndices[i]) {
-                sum += predictTree(trees[t]->root, data[i]);
-                oobCount++;
+        if (taskType == Regression) {
+            double sum = 0.0;
+            int count = 0;
+            
+            for (int t = 0; t < numTrees; t++) {
+                if (trees[t] != nullptr && trees[t]->oobIndices[i]) {
+                    sum += predictTree(trees[t]->root, data[i]);
+                    count++;
+                }
             }
-        }
-        
-        if (oobCount > 0) {
-            double prediction = sum / oobCount;
-            double error = prediction - targets[i];
-            totalError += error * error;
-            totalOob++;
+            
+            if (count > 0) {
+                double pred = sum / count;
+                double error = pred - targets[i];
+                totalError += error * error;
+                totalOob++;
+            }
+        } else {
+            int votes[100];
+            for (int j = 0; j < 100; j++) votes[j] = 0;
+            int count = 0;
+            
+            for (int t = 0; t < numTrees; t++) {
+                if (trees[t] != nullptr && trees[t]->oobIndices[i]) {
+                    int classLabel = static_cast<int>(predictTree(trees[t]->root, data[i]));
+                    if (classLabel >= 0 && classLabel <= 99)
+                        votes[classLabel]++;
+                    count++;
+                }
+            }
+            
+            if (count > 0) {
+                int maxVotes = 0, maxClass = 0;
+                for (int j = 0; j < 100; j++) {
+                    if (votes[j] > maxVotes) {
+                        maxVotes = votes[j];
+                        maxClass = j;
+                    }
+                }
+                
+                if (maxClass != static_cast<int>(targets[i]))
+                    totalError++;
+                totalOob++;
+            }
         }
     }
     
-    if (totalOob == 0)
-        return 0.0;
+    if (totalOob == 0) return 0.0;
     
-    return totalError / totalOob;
+    if (taskType == Regression)
+        return totalError / totalOob;
+    else
+        return 1.0 - (totalError / totalOob);
 }
 
+// ============================================================================
 // Feature Importance
+// ============================================================================
+
 void TRandomForest::calculateFeatureImportance() {
-    for (int i = 0; i < MAX_FEATURES; i++)
-        featureImportances[i] = 0.0;
+    // Normalize feature importances
+    double maxImportance = 0.0;
+    for (int i = 0; i < numFeatures; i++) {
+        if (featureImportances[i] > maxImportance)
+            maxImportance = featureImportances[i];
+    }
+    
+    if (maxImportance > 0.0) {
+        for (int i = 0; i < numFeatures; i++)
+            featureImportances[i] /= maxImportance;
+    }
 }
 
 double TRandomForest::getFeatureImportance(int featureIndex) {
@@ -741,13 +842,15 @@ double TRandomForest::getFeatureImportance(int featureIndex) {
 void TRandomForest::printFeatureImportances() {
     cout << "Feature Importances:" << endl;
     for (int i = 0; i < numFeatures; i++) {
-        cout << "  Feature " << i << ": " << featureImportances[i] << endl;
+        cout << "  Feature " << i << ": " << fixed << setprecision(4) << featureImportances[i] << endl;
     }
 }
 
+// ============================================================================
 // Performance Metrics
-double TRandomForest::accuracy(TTargetArray& predictions, TTargetArray& actual,
-                               int nSamples) {
+// ============================================================================
+
+double TRandomForest::accuracy(TTargetArray& predictions, TTargetArray& actual, int nSamples) {
     if (nSamples == 0) return 0.0;
     
     int correct = 0;
@@ -759,8 +862,7 @@ double TRandomForest::accuracy(TTargetArray& predictions, TTargetArray& actual,
     return static_cast<double>(correct) / nSamples;
 }
 
-double TRandomForest::precision(TTargetArray& predictions, TTargetArray& actual,
-                                int nSamples, int positiveClass) {
+double TRandomForest::precision(TTargetArray& predictions, TTargetArray& actual, int nSamples, int positiveClass) {
     int tp = 0, fp = 0;
     
     for (int i = 0; i < nSamples; i++) {
@@ -777,8 +879,7 @@ double TRandomForest::precision(TTargetArray& predictions, TTargetArray& actual,
     return static_cast<double>(tp) / (tp + fp);
 }
 
-double TRandomForest::recall(TTargetArray& predictions, TTargetArray& actual,
-                             int nSamples, int positiveClass) {
+double TRandomForest::recall(TTargetArray& predictions, TTargetArray& actual, int nSamples, int positiveClass) {
     int tp = 0, fn = 0;
     
     for (int i = 0; i < nSamples; i++) {
@@ -795,8 +896,7 @@ double TRandomForest::recall(TTargetArray& predictions, TTargetArray& actual,
     return static_cast<double>(tp) / (tp + fn);
 }
 
-double TRandomForest::f1Score(TTargetArray& predictions, TTargetArray& actual,
-                              int nSamples, int positiveClass) {
+double TRandomForest::f1Score(TTargetArray& predictions, TTargetArray& actual, int nSamples, int positiveClass) {
     double prec = precision(predictions, actual, nSamples, positiveClass);
     double rec = recall(predictions, actual, nSamples, positiveClass);
     
@@ -804,8 +904,7 @@ double TRandomForest::f1Score(TTargetArray& predictions, TTargetArray& actual,
     return 2.0 * (prec * rec) / (prec + rec);
 }
 
-double TRandomForest::meanSquaredError(TTargetArray& predictions, TTargetArray& actual,
-                                       int nSamples) {
+double TRandomForest::meanSquaredError(TTargetArray& predictions, TTargetArray& actual, int nSamples) {
     if (nSamples == 0) return 0.0;
     
     double mse = 0.0;
@@ -817,8 +916,7 @@ double TRandomForest::meanSquaredError(TTargetArray& predictions, TTargetArray& 
     return mse / nSamples;
 }
 
-double TRandomForest::rSquared(TTargetArray& predictions, TTargetArray& actual,
-                               int nSamples) {
+double TRandomForest::rSquared(TTargetArray& predictions, TTargetArray& actual, int nSamples) {
     if (nSamples == 0) return 0.0;
     
     double meanActual = 0.0;
@@ -840,7 +938,10 @@ double TRandomForest::rSquared(TTargetArray& predictions, TTargetArray& actual,
     return 1.0 - (ssRes / ssTot);
 }
 
+// ============================================================================
 // Utility
+// ============================================================================
+
 void TRandomForest::printForestInfo() {
     cout << "Random Forest Configuration:" << endl;
     cout << "  Number of trees: " << numTrees << endl;
@@ -879,7 +980,6 @@ void TRandomForest::freeForest() {
     }
 }
 
-// Tree Management for Facade
 void TRandomForest::addNewTree() {
     if (numTrees < MAX_TREES)
         numTrees++;
@@ -900,21 +1000,20 @@ void TRandomForest::retrainTreeAt(int treeId) {
     }
 }
 
+// ============================================================================
 // Helper Functions
+// ============================================================================
+
 void PrintHelp() {
     cout << "Random Forest CLI Tool" << endl;
-    cout << "======================" << endl;
-    cout << endl;
-    cout << "Usage: forest <command> [options]" << endl;
-    cout << endl;
-    cout << "Commands:" << endl;
-    cout << endl;
+    cout << "======================" << endl << endl;
+    cout << "Usage: forest <command> [options]" << endl << endl;
+    cout << "Commands:" << endl << endl;
     cout << "  create   Create a new Random Forest model" << endl;
     cout << "  train    Train a Random Forest model" << endl;
     cout << "  predict  Make predictions with a trained model" << endl;
     cout << "  info     Display information about a model" << endl;
-    cout << "  help     Show this help message" << endl;
-    cout << endl;
+    cout << "  help     Show this help message" << endl << endl;
     cout << "CREATE Options:" << endl;
     cout << "  --trees=N              Number of trees (default: 100)" << endl;
     cout << "  --max-depth=N          Maximum tree depth (default: 10)" << endl;
@@ -923,21 +1022,17 @@ void PrintHelp() {
     cout << "  --max-features=N       Maximum features to consider" << endl;
     cout << "  --criterion=CRITERION  Split criterion: gini, entropy, mse, variancereduction" << endl;
     cout << "  --task=TASK            Task type: classification, regression" << endl;
-    cout << "  --save=FILE            Save model to file (required)" << endl;
-    cout << endl;
+    cout << "  --save=FILE            Save model to file (required)" << endl << endl;
     cout << "TRAIN Options:" << endl;
     cout << "  --model=FILE           Model file to train (required)" << endl;
     cout << "  --data=FILE            Data file for training (required)" << endl;
-    cout << "  --save=FILE            Save trained model to file (required)" << endl;
-    cout << endl;
+    cout << "  --save=FILE            Save trained model to file (required)" << endl << endl;
     cout << "PREDICT Options:" << endl;
     cout << "  --model=FILE           Model file to use (required)" << endl;
     cout << "  --data=FILE            Data file for prediction (required)" << endl;
-    cout << "  --output=FILE          Save predictions to file (optional)" << endl;
-    cout << endl;
+    cout << "  --output=FILE          Save predictions to file (optional)" << endl << endl;
     cout << "INFO Options:" << endl;
-    cout << "  --model=FILE           Model file to inspect (required)" << endl;
-    cout << endl;
+    cout << "  --model=FILE           Model file to inspect (required)" << endl << endl;
     cout << "Examples:" << endl;
     cout << "  forest create --trees=50 --max-depth=15 --save=model.bin" << endl;
     cout << "  forest train --model=model.bin --data=train.csv --save=model_trained.bin" << endl;
@@ -946,7 +1041,6 @@ void PrintHelp() {
 }
 
 SplitCriterion ParseSplitCriterion(string value) {
-    // Convert to lowercase
     for (auto& c : value) c = tolower(c);
     
     if (value == "entropy")
@@ -960,7 +1054,6 @@ SplitCriterion ParseSplitCriterion(string value) {
 }
 
 TaskType ParseTaskMode(string value) {
-    // Convert to lowercase
     for (auto& c : value) c = tolower(c);
     
     if (value == "regression")
@@ -969,7 +1062,10 @@ TaskType ParseTaskMode(string value) {
         return Classification;
 }
 
+// ============================================================================
 // Main Program
+// ============================================================================
+
 int main(int argc, char* argv[]) {
     if (argc < 2) {
         PrintHelp();
@@ -977,10 +1073,8 @@ int main(int argc, char* argv[]) {
     }
     
     string command = argv[1];
-    // Convert to lowercase
     for (auto& c : command) c = tolower(c);
     
-    // Initialize defaults
     int numTrees = 100;
     int maxDepth = MAX_DEPTH_DEFAULT;
     int minLeaf = MIN_SAMPLES_LEAF_DEFAULT;
@@ -998,7 +1092,6 @@ int main(int argc, char* argv[]) {
         return 0;
     }
     else if (command == "create") {
-        // Parse arguments
         for (int i = 2; i < argc; i++) {
             string arg = argv[i];
             size_t eqPos = arg.find('=');
@@ -1077,7 +1170,6 @@ int main(int argc, char* argv[]) {
         rf.freeForest();
     }
     else if (command == "train") {
-        // Parse arguments
         for (int i = 2; i < argc; i++) {
             string arg = argv[i];
             size_t eqPos = arg.find('=');
@@ -1120,7 +1212,6 @@ int main(int argc, char* argv[]) {
         cout << "Model saved to: " << saveFile << endl;
     }
     else if (command == "predict") {
-        // Parse arguments
         for (int i = 2; i < argc; i++) {
             string arg = argv[i];
             size_t eqPos = arg.find('=');
@@ -1159,7 +1250,6 @@ int main(int argc, char* argv[]) {
             cout << "Predictions saved to: " << outputFile << endl;
     }
     else if (command == "info") {
-        // Parse arguments
         for (int i = 2; i < argc; i++) {
             string arg = argv[i];
             size_t eqPos = arg.find('=');
