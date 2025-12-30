@@ -1,7 +1,6 @@
 //
 // Matthew Abbott 2025
-// C++ Port: Combined Random Forest + Facade (single-file program) - OpenCL Version
-// Complete port from facade_forest.pas with OpenCL GPU acceleration
+// Random Forest + Facade: C++ - OpenCL Version
 //
 
 #define CL_TARGET_OPENCL_VERSION 120
