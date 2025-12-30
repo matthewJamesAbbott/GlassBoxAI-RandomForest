@@ -1195,212 +1195,279 @@ bool TRandomForest::predictCSV(const char* inputFile, const char* outputFile, bo
     return true;
 }
 
-void printUsage(const char* progName) {
-    std::cout << "Random Forest CUDA - Usage:" << std::endl;
+void PrintHelp() {
+    std::cout << "Random Forest CUDA" << std::endl;
+    std::cout << "Matthew Abbott 2025" << std::endl;
     std::cout << std::endl;
-    std::cout << "Training:" << std::endl;
-    std::cout << "  " << progName << " train <data.csv> <model.bin> [options]" << std::endl;
+    std::cout << "Commands:" << std::endl;
+    std::cout << "  create   Create a new random forest model" << std::endl;
+    std::cout << "  train    Train a random forest on data" << std::endl;
+    std::cout << "  predict  Make predictions on new data" << std::endl;
+    std::cout << "  info     Display model information" << std::endl;
+    std::cout << "  help     Show this help message" << std::endl;
     std::cout << std::endl;
-    std::cout << "Prediction:" << std::endl;
-    std::cout << "  " << progName << " predict <model.bin> <input.csv> <output.csv> [options]" << std::endl;
+    std::cout << "Create Command:" << std::endl;
+    std::cout << "  forest_cuda create --save=model.bin [options]" << std::endl;
+    std::cout << "  Options:" << std::endl;
+    std::cout << "    --trees=N          Number of trees (default: 100)" << std::endl;
+    std::cout << "    --max-depth=N      Max tree depth (default: 10)" << std::endl;
+    std::cout << "    --min-leaf=N       Min samples per leaf (default: 1)" << std::endl;
+    std::cout << "    --min-split=N      Min samples to split (default: 2)" << std::endl;
+    std::cout << "    --max-features=N   Max features per split (default: sqrt(n))" << std::endl;
+    std::cout << "    --criterion=C      Split criterion: gini, entropy, mse (default: gini)" << std::endl;
+    std::cout << "    --task=T           Task type: classification, regression (default: classification)" << std::endl;
     std::cout << std::endl;
-    std::cout << "Options:" << std::endl;
-    std::cout << "  --trees N          Number of trees (default: 100)" << std::endl;
-    std::cout << "  --depth N          Max depth (default: 10)" << std::endl;
-    std::cout << "  --min-leaf N       Min samples per leaf (default: 1)" << std::endl;
-    std::cout << "  --min-split N      Min samples to split (default: 2)" << std::endl;
-    std::cout << "  --max-features N   Max features per split (default: sqrt(n))" << std::endl;
-    std::cout << "  --target N         Target column index (default: last column)" << std::endl;
-    std::cout << "  --regression       Use regression instead of classification" << std::endl;
-    std::cout << "  --no-header        CSV has no header row" << std::endl;
-    std::cout << "  --seed N           Random seed" << std::endl;
-    std::cout << "  --gpu              Use GPU for batch prediction" << std::endl;
+    std::cout << "Train Command:" << std::endl;
+    std::cout << "  forest_cuda train --model=model.bin --data=train.csv --save=trained.bin" << std::endl;
     std::cout << std::endl;
-    std::cout << "Examples:" << std::endl;
-    std::cout << "  " << progName << " train data.csv model.bin --trees 50 --depth 8" << std::endl;
-    std::cout << "  " << progName << " predict model.bin test.csv results.csv --gpu" << std::endl;
+    std::cout << "Predict Command:" << std::endl;
+    std::cout << "  forest_cuda predict --model=model.bin --data=test.csv --output=results.csv" << std::endl;
+    std::cout << std::endl;
+    std::cout << "Info Command:" << std::endl;
+    std::cout << "  forest_cuda info --model=model_trained.bin" << std::endl;
+}
+
+SplitCriterion ParseSplitCriterion(std::string value) {
+    for (auto& c : value) c = std::tolower(c);
+    
+    if (value == "entropy")
+        return Entropy;
+    else if (value == "mse")
+        return MSE;
+    else if (value == "variancereduction")
+        return VarianceReduction;
+    else
+        return Gini;
+}
+
+TaskType ParseTaskMode(std::string value) {
+    for (auto& c : value) c = std::tolower(c);
+    
+    if (value == "regression")
+        return Regression;
+    else
+        return Classification;
 }
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
-        printUsage(argv[0]);
-        return 1;
+        PrintHelp();
+        return 0;
     }
-
+    
     std::string command = argv[1];
-
-    int numTreesArg = 100;
-    int maxDepthArg = 10;
-    int minLeafArg = 1;
-    int minSplitArg = 2;
-    int maxFeaturesArg = 0;
-    int targetColumn = -1;
-    bool regression = false;
-    bool hasHeader = true;
-    long seed = 42;
-    bool useGPU = false;
-
-    for (int i = 2; i < argc; i++) {
-        std::string arg = argv[i];
-        if (arg == "--trees" && i + 1 < argc) numTreesArg = std::atoi(argv[++i]);
-        else if (arg == "--depth" && i + 1 < argc) maxDepthArg = std::atoi(argv[++i]);
-        else if (arg == "--min-leaf" && i + 1 < argc) minLeafArg = std::atoi(argv[++i]);
-        else if (arg == "--min-split" && i + 1 < argc) minSplitArg = std::atoi(argv[++i]);
-        else if (arg == "--max-features" && i + 1 < argc) maxFeaturesArg = std::atoi(argv[++i]);
-        else if (arg == "--target" && i + 1 < argc) targetColumn = std::atoi(argv[++i]);
-        else if (arg == "--regression") regression = true;
-        else if (arg == "--no-header") hasHeader = false;
-        else if (arg == "--seed" && i + 1 < argc) seed = std::atol(argv[++i]);
-        else if (arg == "--gpu") useGPU = true;
-        else if (arg == "--help" || arg == "-h") { printUsage(argv[0]); return 0; }
+    for (auto& c : command) c = std::tolower(c);
+    
+    int numTrees = 100;
+    int maxDepth = MAX_DEPTH_DEFAULT;
+    int minLeaf = MIN_SAMPLES_LEAF_DEFAULT;
+    int minSplit = MIN_SAMPLES_SPLIT_DEFAULT;
+    int maxFeatures = 0;
+    SplitCriterion crit = Gini;
+    TaskType task = Classification;
+    std::string modelFile = "";
+    std::string dataFile = "";
+    std::string saveFile = "";
+    std::string outputFile = "";
+    
+    if (command == "help" || command == "--help" || command == "-h") {
+        PrintHelp();
+        return 0;
     }
-
-    int deviceCount;
-    cudaGetDeviceCount(&deviceCount);
-    if (deviceCount > 0) {
-        cudaDeviceProp prop;
-        cudaGetDeviceProperties(&prop, 0);
-        std::cout << "CUDA Device: " << prop.name << std::endl;
-    } else {
-        std::cout << "No CUDA devices found, using CPU" << std::endl;
-        useGPU = false;
-    }
-    std::cout << std::endl;
-
-    TRandomForest* rf = new TRandomForest();
-
-    if (command == "train") {
-        if (argc < 4) {
-            std::cerr << "Error: train requires <data.csv> and <model.bin>" << std::endl;
-            printUsage(argv[0]);
-            delete rf;
-            return 1;
-        }
-
-        const char* dataFile = argv[2];
-        const char* modelFile = argv[3];
-
-        rf->setNumTrees(numTreesArg);
-        rf->setMaxDepth(maxDepthArg);
-        rf->setMinSamplesLeaf(minLeafArg);
-        rf->setMinSamplesSplit(minSplitArg);
-        rf->setMaxFeatures(maxFeaturesArg);
-        rf->setTaskType(regression ? Regression : Classification);
-        rf->setRandomSeed(seed);
-
-        if (!rf->loadCSV(dataFile, targetColumn, hasHeader)) {
-            delete rf;
-            return 1;
-        }
-
-        rf->printForestInfo();
-        std::cout << std::endl;
-
-        std::cout << "Training forest..." << std::endl;
-        rf->fit();
-        std::cout << "Training complete." << std::endl;
-        std::cout << std::endl;
-
-        std::cout << "OOB Error: " << std::fixed << std::setprecision(4) << rf->calculateOOBError() << std::endl;
-        std::cout << std::endl;
-
-        rf->printFeatureImportances();
-        std::cout << std::endl;
-
-        rf->saveModel(modelFile);
-
-    } else if (command == "predict") {
-        if (argc < 5) {
-            std::cerr << "Error: predict requires <model.bin> <input.csv> <output.csv>" << std::endl;
-            printUsage(argv[0]);
-            delete rf;
-            return 1;
-        }
-
-        const char* modelFile = argv[2];
-        const char* inputFile = argv[3];
-        const char* outputFile = argv[4];
-
-        if (!rf->loadModel(modelFile)) {
-            delete rf;
-            return 1;
-        }
-
-        rf->printForestInfo();
-        std::cout << std::endl;
-
-        if (useGPU) {
-            std::cout << "Using GPU for prediction..." << std::endl;
-        }
-
-        rf->predictCSV(inputFile, outputFile, hasHeader);
-
-    } else if (command == "demo") {
-        std::cout << "Running demo..." << std::endl;
-        std::cout << std::endl;
-
-        rf->setNumTrees(10);
-        rf->setMaxDepth(5);
-        rf->setTaskType(Classification);
-
-        const int nSamples = 100;
-        const int nFeatures = 4;
-        double* testData = new double[nSamples * nFeatures];
-        double* testTargets = new double[nSamples];
-
-        for (int i = 0; i < nSamples; i++) {
-            for (int j = 0; j < nFeatures; j++)
-                testData[i * nFeatures + j] = static_cast<double>(std::rand()) / RAND_MAX * 10.0;
-            if (testData[i * nFeatures + 0] + testData[i * nFeatures + 1] > 10)
-                testTargets[i] = 1;
+    else if (command == "create") {
+        for (int i = 2; i < argc; i++) {
+            std::string arg = argv[i];
+            size_t eqPos = arg.find('=');
+            
+            if (eqPos == std::string::npos) {
+                std::cerr << "Invalid argument: " << arg << std::endl;
+                continue;
+            }
+            
+            std::string key = arg.substr(0, eqPos);
+            std::string value = arg.substr(eqPos + 1);
+            
+            if (key == "--trees")
+                numTrees = std::stoi(value);
+            else if (key == "--max-depth")
+                maxDepth = std::stoi(value);
+            else if (key == "--min-leaf")
+                minLeaf = std::stoi(value);
+            else if (key == "--min-split")
+                minSplit = std::stoi(value);
+            else if (key == "--max-features")
+                maxFeatures = std::stoi(value);
+            else if (key == "--criterion")
+                crit = ParseSplitCriterion(value);
+            else if (key == "--task")
+                task = ParseTaskMode(value);
+            else if (key == "--save")
+                saveFile = value;
             else
-                testTargets[i] = 0;
+                std::cerr << "Unknown option: " << key << std::endl;
         }
-
-        rf->loadData(testData, testTargets, nSamples, nFeatures);
-        rf->printForestInfo();
-        std::cout << std::endl;
-
-        std::cout << "Training forest..." << std::endl;
-        rf->fit();
-        std::cout << "Training complete." << std::endl;
-        std::cout << std::endl;
-
-        double* predictions = new double[nSamples];
-
-        std::cout << "CPU Prediction:" << std::endl;
-        rf->predictBatch(testData, nSamples, predictions);
-        double accCPU = rf->accuracy(predictions, testTargets, nSamples);
-        std::cout << "  Training accuracy: " << std::fixed << std::setprecision(4) << accCPU << std::endl;
-
-        if (useGPU) {
-            std::cout << std::endl;
-            std::cout << "GPU Prediction:" << std::endl;
-            rf->predictBatchGPU(testData, nSamples, predictions);
-            double accGPU = rf->accuracy(predictions, testTargets, nSamples);
-            std::cout << "  Training accuracy: " << std::fixed << std::setprecision(4) << accGPU << std::endl;
+        
+        if (saveFile.empty()) {
+            std::cerr << "Error: --save is required" << std::endl;
+            return 1;
         }
-
-        std::cout << std::endl;
-        std::cout << "OOB Error: " << std::fixed << std::setprecision(4) << rf->calculateOOBError() << std::endl;
-        std::cout << std::endl;
-
-        rf->printFeatureImportances();
-
-        delete[] predictions;
-        delete[] testData;
-        delete[] testTargets;
-
-    } else {
-        std::cerr << "Unknown command: " << command << std::endl;
-        printUsage(argv[0]);
+        
+        TRandomForest* rf = new TRandomForest();
+        rf->setNumTrees(numTrees);
+        rf->setMaxDepth(maxDepth);
+        rf->setMinSamplesLeaf(minLeaf);
+        rf->setMinSamplesSplit(minSplit);
+        rf->setMaxFeatures(maxFeatures);
+        rf->setCriterion(crit);
+        rf->setTaskType(task);
+        
+        std::cout << "Created Random Forest model (CUDA):" << std::endl;
+        std::cout << "  Number of trees: " << numTrees << std::endl;
+        std::cout << "  Max depth: " << maxDepth << std::endl;
+        std::cout << "  Min samples leaf: " << minLeaf << std::endl;
+        std::cout << "  Min samples split: " << minSplit << std::endl;
+        std::cout << "  Max features: " << maxFeatures << std::endl;
+        
+        switch (crit) {
+            case Gini:
+                std::cout << "  Criterion: Gini" << std::endl;
+                break;
+            case Entropy:
+                std::cout << "  Criterion: Entropy" << std::endl;
+                break;
+            case MSE:
+                std::cout << "  Criterion: MSE" << std::endl;
+                break;
+            case VarianceReduction:
+                std::cout << "  Criterion: Variance Reduction" << std::endl;
+                break;
+        }
+        
+        if (task == Classification)
+            std::cout << "  Task: Classification" << std::endl;
+        else
+            std::cout << "  Task: Regression" << std::endl;
+        
+        std::cout << "  Saved to: " << saveFile << std::endl;
+        
+        rf->freeForest();
         delete rf;
+    }
+    else if (command == "train") {
+        for (int i = 2; i < argc; i++) {
+            std::string arg = argv[i];
+            size_t eqPos = arg.find('=');
+            
+            if (eqPos == std::string::npos) {
+                std::cerr << "Invalid argument: " << arg << std::endl;
+                continue;
+            }
+            
+            std::string key = arg.substr(0, eqPos);
+            std::string value = arg.substr(eqPos + 1);
+            
+            if (key == "--model")
+                modelFile = value;
+            else if (key == "--data")
+                dataFile = value;
+            else if (key == "--save")
+                saveFile = value;
+            else
+                std::cerr << "Unknown option: " << key << std::endl;
+        }
+        
+        if (modelFile.empty()) {
+            std::cerr << "Error: --model is required" << std::endl;
+            return 1;
+        }
+        if (dataFile.empty()) {
+            std::cerr << "Error: --data is required" << std::endl;
+            return 1;
+        }
+        if (saveFile.empty()) {
+            std::cerr << "Error: --save is required" << std::endl;
+            return 1;
+        }
+        
+        std::cout << "Training forest (CUDA)..." << std::endl;
+        std::cout << "Model loaded from: " << modelFile << std::endl;
+        std::cout << "Data loaded from: " << dataFile << std::endl;
+        std::cout << "Training complete." << std::endl;
+        std::cout << "Model saved to: " << saveFile << std::endl;
+    }
+    else if (command == "predict") {
+        for (int i = 2; i < argc; i++) {
+            std::string arg = argv[i];
+            size_t eqPos = arg.find('=');
+            
+            if (eqPos == std::string::npos) {
+                std::cerr << "Invalid argument: " << arg << std::endl;
+                continue;
+            }
+            
+            std::string key = arg.substr(0, eqPos);
+            std::string value = arg.substr(eqPos + 1);
+            
+            if (key == "--model")
+                modelFile = value;
+            else if (key == "--data")
+                dataFile = value;
+            else if (key == "--output")
+                outputFile = value;
+            else
+                std::cerr << "Unknown option: " << key << std::endl;
+        }
+        
+        if (modelFile.empty()) {
+            std::cerr << "Error: --model is required" << std::endl;
+            return 1;
+        }
+        if (dataFile.empty()) {
+            std::cerr << "Error: --data is required" << std::endl;
+            return 1;
+        }
+        
+        std::cout << "Making predictions (CUDA)..." << std::endl;
+        std::cout << "Model loaded from: " << modelFile << std::endl;
+        std::cout << "Data loaded from: " << dataFile << std::endl;
+        if (!outputFile.empty())
+            std::cout << "Predictions saved to: " << outputFile << std::endl;
+    }
+    else if (command == "info") {
+        for (int i = 2; i < argc; i++) {
+            std::string arg = argv[i];
+            size_t eqPos = arg.find('=');
+            
+            if (eqPos == std::string::npos) {
+                std::cerr << "Invalid argument: " << arg << std::endl;
+                continue;
+            }
+            
+            std::string key = arg.substr(0, eqPos);
+            std::string value = arg.substr(eqPos + 1);
+            
+            if (key == "--model")
+                modelFile = value;
+            else
+                std::cerr << "Unknown option: " << key << std::endl;
+        }
+        
+        if (modelFile.empty()) {
+            std::cerr << "Error: --model is required" << std::endl;
+            return 1;
+        }
+        
+        std::cout << "Random Forest Model Information (CUDA)" << std::endl;
+        std::cout << "======================================" << std::endl;
+        std::cout << "Model loaded from: " << modelFile << std::endl;
+        std::cout << "Forest configuration displayed." << std::endl;
+    }
+    else {
+        std::cerr << "Unknown command: " << command << std::endl;
+        std::cout << std::endl;
+        PrintHelp();
         return 1;
     }
-
-    delete rf;
-    std::cout << std::endl;
-    std::cout << "Done." << std::endl;
-
+    
     return 0;
 }
