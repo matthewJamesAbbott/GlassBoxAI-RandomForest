@@ -1,0 +1,13 @@
+[package]
+name = "random_forest_cuda"
+version = "0.1.0"
+edition = "2021"
+authors = ["Matthew Abbott"]
+description = "CUDA-accelerated Random Forest implementation using cudarc"
+
+[dependencies]
+cudarc = { version = "0.12", features = ["driver", "nvrtc", "cuda-version-from-build-system"] }
+
+[profile.release]
+opt-level = 3
+lto = true

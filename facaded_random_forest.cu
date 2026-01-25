@@ -625,8 +625,10 @@ void TRandomForestFacade::highlightMisclassified(double* predictions, double* ac
 // ============================================================================
 
 void PrintHelp() {
-    cout << "Random Forest Facade CLI (CUDA GPU) - Matthew Abbott 2025" << endl;
-    cout << "Advanced Random Forest with Introspection, Tree Manipulation, and Feature Control" << endl << endl;
+    cout << "Random Forest Facade CLI (CUDA)" << endl;
+    cout << "Matthew Abbott 2025" << endl;
+    cout << "Advanced Random Forest with Introspection, Tree Manipulation, and Feature Control" << endl;
+    cout << endl;
     cout << "Usage: forest_facade <command> [options]" << endl << endl;
     
     cout << "=== Core Commands ===" << endl;
@@ -680,58 +682,62 @@ void PrintHelp() {
     
     cout << "=== Options ===" << endl << endl;
     cout << "Data & Model:" << endl;
-    cout << "  --input <file>          Training input data (CSV)" << endl;
-    cout << "  --target <file>         Training targets (CSV)" << endl;
-    cout << "  --data <file>           Test/prediction data (CSV)" << endl;
-    cout << "  --model <file>          Model file (default: forest.bin)" << endl;
-    cout << "  --output <file>         Output predictions file" << endl << endl;
+    cout << "  --input=<file>          Training input data (CSV)" << endl;
+    cout << "  --target=<file>         Training targets (CSV)" << endl;
+    cout << "  --data=<file>           Test/prediction data (CSV)" << endl;
+    cout << "  --model=<file>          Model file (default: forest.bin)" << endl;
+    cout << "  --output=<file>         Output predictions file" << endl << endl;
     
     cout << "Hyperparameters:" << endl;
-    cout << "  --trees <n>             Number of trees (default: 100)" << endl;
-    cout << "  --depth <n>             Max tree depth (default: 10)" << endl;
-    cout << "  --min-leaf <n>          Min samples per leaf (default: 1)" << endl;
-    cout << "  --min-split <n>         Min samples to split node (default: 2)" << endl;
-    cout << "  --max-features <n>      Max features per split (0=auto)" << endl;
-    cout << "  --task <class|reg>      Task type (default: class)" << endl;
-    cout << "  --criterion <c>         Split criterion: gini/entropy/mse/var" << endl << endl;
+    cout << "  --trees=<n>             Number of trees (default: 100)" << endl;
+    cout << "  --depth=<n>             Max tree depth (default: 10)" << endl;
+    cout << "  --min-leaf=<n>          Min samples per leaf (default: 1)" << endl;
+    cout << "  --min-split=<n>         Min samples to split node (default: 2)" << endl;
+    cout << "  --max-features=<n>      Max features per split (0=auto)" << endl;
+    cout << "  --task=<class|reg>      Task type (default: class)" << endl;
+    cout << "  --criterion=<c>         Split criterion: gini/entropy/mse/var" << endl << endl;
     
     cout << "Tree Manipulation:" << endl;
-    cout << "  --tree <id>             Tree ID for operations" << endl;
-    cout << "  --node <id>             Node ID for operations" << endl;
-    cout << "  --threshold <val>       New split threshold" << endl;
-    cout << "  --value <val>           New leaf value" << endl << endl;
+    cout << "  --tree=<id>             Tree ID for operations" << endl;
+    cout << "  --node=<id>             Node ID for operations" << endl;
+    cout << "  --threshold=<val>       New split threshold" << endl;
+    cout << "  --value=<val>           New leaf value" << endl << endl;
     
     cout << "Feature/Weight Control:" << endl;
-    cout << "  --feature <id>          Feature ID for operations" << endl;
-    cout << "  --weight <val>          Tree weight (0.0-1.0)" << endl;
-    cout << "  --aggregation <method>  majority|weighted|mean|weighted-mean" << endl;
-    cout << "  --sample <id>           Sample ID for tracking" << endl << endl;
+    cout << "  --feature=<id>          Feature ID for operations" << endl;
+    cout << "  --weight=<val>          Tree weight (0.0-1.0)" << endl;
+    cout << "  --aggregation=<method>  majority|weighted|mean|weighted-mean" << endl;
+    cout << "  --sample=<id>           Sample ID for tracking" << endl << endl;
     
     cout << "=== Examples ===" << endl;
     cout << "  # Create and train forest" << endl;
-    cout << "  forest_facade create --trees 100 --depth 10 --model rf.bin" << endl;
-    cout << "  forest_facade train --input data.csv --target labels.csv --model rf.bin" << endl << endl;
+    cout << "  forest_facade create --trees=100 --depth=10 --model=rf.bin" << endl;
+    cout << "  forest_facade train --input=data.csv --target=labels.csv --model=rf.bin" << endl << endl;
     cout << "  # Make predictions and evaluate" << endl;
-    cout << "  forest_facade predict --data test.csv --model rf.bin --output preds.csv" << endl;
-    cout << "  forest_facade evaluate --data test.csv --model rf.bin" << endl << endl;
+    cout << "  forest_facade predict --data=test.csv --model=rf.bin --output=preds.csv" << endl;
+    cout << "  forest_facade evaluate --data=test.csv --model=rf.bin" << endl << endl;
     cout << "  # Tree inspection" << endl;
-    cout << "  forest_facade inspect-tree --tree 5 --model rf.bin" << endl;
-    cout << "  forest_facade tree-depth --tree 5 --model rf.bin" << endl << endl;
+    cout << "  forest_facade inspect-tree --tree=5 --model=rf.bin" << endl;
+    cout << "  forest_facade tree-depth --tree=5 --model=rf.bin" << endl << endl;
     cout << "  # Feature analysis" << endl;
-    cout << "  forest_facade feature-usage --model rf.bin" << endl;
-    cout << "  forest_facade importance --model rf.bin" << endl << endl;
+    cout << "  forest_facade feature-usage --model=rf.bin" << endl;
+    cout << "  forest_facade importance --model=rf.bin" << endl << endl;
     cout << "  # Tree manipulation" << endl;
-    cout << "  forest_facade add-tree --model rf.bin" << endl;
-    cout << "  forest_facade remove-tree --tree 5 --model rf.bin" << endl;
-    cout << "  forest_facade disable-feature --feature 3 --model rf.bin" << endl << endl;
+    cout << "  forest_facade add-tree --model=rf.bin" << endl;
+    cout << "  forest_facade remove-tree --tree=5 --model=rf.bin" << endl;
+    cout << "  forest_facade disable-feature --feature=3 --model=rf.bin" << endl << endl;
     cout << "  # Aggregation control" << endl;
-    cout << "  forest_facade set-aggregation --aggregation weighted-mean --model rf.bin" << endl;
-    cout << "  forest_facade set-weight --tree 5 --weight 1.5 --model rf.bin" << endl;
+    cout << "  forest_facade set-aggregation --aggregation=weighted-mean --model=rf.bin" << endl;
+    cout << "  forest_facade set-weight --tree=5 --weight=1.5 --model=rf.bin" << endl;
 }
 
 string GetArg(int argc, char* argv[], const string& name) {
-    for (int i = 1; i < argc - 1; i++) {
-        if (argv[i] == name) return argv[i + 1];
+    string prefix = name + "=";
+    for (int i = 1; i < argc; i++) {
+        string arg = argv[i];
+        if (arg.substr(0, prefix.size()) == prefix) {
+            return arg.substr(prefix.size());
+        }
     }
     return "";
 }

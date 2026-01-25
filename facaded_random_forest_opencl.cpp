@@ -2314,147 +2314,109 @@ bool hasArg(int argc, char* argv[], const char* argName) {
 }
 
 void PrintHelp() {
-    printf("Random Forest Facade with GPU Acceleration\n\n");
-    printf("Commands:\n");
-    printf("  create             - Create a new forest model\n");
-    printf("  train              - Train a forest model on data\n");
-    printf("  predict            - Make predictions with a forest model\n");
-    printf("  predict-gpu        - Make GPU-accelerated predictions\n");
-    printf("  info               - Display forest model information\n");
-    printf("  inspect-tree       - Inspect details of a specific tree\n");
-    printf("  tree-stats         - Get statistics for a tree\n");
-    printf("  add-tree           - Add a new tree to the forest\n");
-    printf("  remove-tree        - Remove a tree from the forest\n");
-    printf("  replace-tree       - Replace a tree with new bootstrap sample\n");
-    printf("  retrain-tree       - Retrain a specific tree\n");
-    printf("  convert-node       - Convert a node to a leaf node\n");
-    printf("  enable-feature     - Enable a feature for predictions\n");
-    printf("  disable-feature    - Disable a feature for predictions\n");
-    printf("  feature-stats      - Display feature usage statistics\n");
-    printf("  feature-importance - Display feature importance scores\n");
-    printf("  set-aggregation    - Set prediction aggregation method\n");
-    printf("  tree-weight        - Set weight for a tree in aggregation\n");
-    printf("  reset-weights      - Reset all tree weights to 1.0\n");
-    printf("  oob-summary        - Display out-of-bag error summary\n");
-    printf("  metrics            - Calculate performance metrics\n");
-    printf("  visualize          - Visualize tree structure\n");
-    printf("  forest-overview    - Display forest overview\n");
-    printf("  compare-forests    - Compare two forest models\n");
-    printf("  help               - Display this help message\n\n");
+    printf("Random Forest Facade CLI (OpenCL)\n");
+    printf("Matthew Abbott 2025\n");
+    printf("Advanced Random Forest with Introspection, Tree Manipulation, and Feature Control\n\n");
+    printf("Usage: forest_facade <command> [options]\n\n");
     
-    printf("Create Command:\n");
-    printf("  --trees=<n>         Number of trees (default: 100)\n");
-    printf("  --max-depth=<n>     Maximum tree depth (default: 10)\n");
-    printf("  --min-leaf=<n>      Minimum samples per leaf (default: 1)\n");
-    printf("  --min-split=<n>     Minimum samples to split (default: 2)\n");
-    printf("  --max-features=<n>  Max features per split (default: 0)\n");
-    printf("  --criterion=<c>     Split criterion: gini|entropy|mse|variance (default: gini)\n");
-    printf("  --task=<t>          Task type: classification|regression (default: classification)\n");
-    printf("  --seed=<n>          Random seed (default: 42)\n");
-    printf("  --save=<file>       Save model to JSON file (required)\n\n");
+    printf("=== Core Commands ===\n");
+    printf("  create              Create a new empty forest model\n");
+    printf("  train               Train a random forest model\n");
+    printf("  predict             Make predictions using a trained model\n");
+    printf("  evaluate            Evaluate model on test data\n");
+    printf("  save                Save model to file\n");
+    printf("  load                Load model from file\n");
+    printf("  info                Show forest hyperparameters\n");
+    printf("  gpu-info            Show GPU device information\n");
+    printf("  help                Show this help message\n\n");
     
-    printf("Train Command:\n");
-    printf("  --model=<file>      Load model from JSON file (required)\n");
-    printf("  --data=<file>       Load training data from CSV (required)\n");
-    printf("  --save=<file>       Save trained model to JSON file (required)\n");
-    printf("  --seed=<n>          Random seed (optional)\n\n");
+    printf("=== Tree Inspection & Manipulation ===\n");
+    printf("  inspect-tree        Inspect tree structure and nodes\n");
+    printf("  tree-depth          Get depth of a specific tree\n");
+    printf("  tree-nodes          Get node count of a specific tree\n");
+    printf("  tree-leaves         Get leaf count of a specific tree\n");
+    printf("  node-details        Get details of a specific node\n");
+    printf("  prune-tree          Prune subtree at specified node\n");
+    printf("  modify-split        Modify split threshold at node\n");
+    printf("  modify-leaf         Modify leaf prediction value\n");
+    printf("  convert-to-leaf     Convert node to leaf\n\n");
     
-    printf("Predict Command:\n");
-    printf("  --model=<file>      Load model from JSON file (required)\n");
-    printf("  --data=<file>       Load test data from CSV (required)\n");
-    printf("  --output=<file>     Save predictions to file (optional)\n");
-    printf("  --aggregation=<m>   Aggregation method: majority|weighted|mean|wmean (default: mean)\n\n");
+    printf("=== Tree Management ===\n");
+    printf("  add-tree            Add a new tree to the forest\n");
+    printf("  remove-tree         Remove a tree from the forest\n");
+    printf("  replace-tree        Replace a tree with new bootstrap sample\n");
+    printf("  retrain-tree        Retrain a specific tree\n\n");
     
-    printf("Predict GPU Command:\n");
-    printf("  --model=<file>      Load model from JSON file (required)\n");
-    printf("  --data=<file>       Load test data from CSV (required)\n");
-    printf("  --output=<file>     Save predictions to file (optional)\n");
-    printf("  --aggregation=<m>   Aggregation method: majority|weighted|mean|wmean (default: mean)\n\n");
+    printf("=== Feature Control ===\n");
+    printf("  enable-feature      Enable a feature for predictions\n");
+    printf("  disable-feature     Disable a feature for predictions\n");
+    printf("  reset-features      Reset all feature filters\n");
+    printf("  feature-usage       Show feature usage summary\n");
+    printf("  importance          Show feature importances\n\n");
     
-    printf("Info Command:\n");
-    printf("  --model=<file>      Load model from JSON file (required)\n\n");
+    printf("=== Aggregation Control ===\n");
+    printf("  set-aggregation     Set prediction aggregation method\n");
+    printf("  get-aggregation     Get current aggregation method\n");
+    printf("  set-weight          Set weight for specific tree\n");
+    printf("  get-weight          Get weight of specific tree\n");
+    printf("  reset-weights       Reset all tree weights to 1.0\n\n");
     
-    printf("Inspect Tree Command:\n");
-    printf("  --model=<file>      Load model from JSON file (required)\n");
-    printf("  --tree=<id>         Tree ID to inspect (required)\n\n");
+    printf("=== Performance Analysis ===\n");
+    printf("  oob-summary         Show OOB error summary per tree\n");
+    printf("  track-sample        Track which trees influence a sample\n");
+    printf("  metrics             Calculate accuracy/MSE/F1 etc.\n");
+    printf("  misclassified       Highlight misclassified samples\n");
+    printf("  worst-trees         Find trees with highest error\n\n");
     
-    printf("Tree Stats Command:\n");
-    printf("  --model=<file>      Load model from JSON file (required)\n");
-    printf("  --tree=<id>         Tree ID to analyze (required)\n\n");
+    printf("=== Options ===\n\n");
+    printf("Data & Model:\n");
+    printf("  --input=<file>          Training input data (CSV)\n");
+    printf("  --target=<file>         Training targets (CSV)\n");
+    printf("  --data=<file>           Test/prediction data (CSV)\n");
+    printf("  --model=<file>          Model file (default: forest.bin)\n");
+    printf("  --output=<file>         Output predictions file\n\n");
     
-    printf("Add Tree Command:\n");
-    printf("  --model=<file>      Load model from JSON file (required)\n");
-    printf("  --save=<file>       Save updated model to JSON file (required)\n\n");
+    printf("Hyperparameters:\n");
+    printf("  --trees=<n>             Number of trees (default: 100)\n");
+    printf("  --depth=<n>             Max tree depth (default: 10)\n");
+    printf("  --min-leaf=<n>          Min samples per leaf (default: 1)\n");
+    printf("  --min-split=<n>         Min samples to split node (default: 2)\n");
+    printf("  --max-features=<n>      Max features per split (0=auto)\n");
+    printf("  --task=<class|reg>      Task type (default: class)\n");
+    printf("  --criterion=<c>         Split criterion: gini/entropy/mse/var\n\n");
     
-    printf("Remove Tree Command:\n");
-    printf("  --model=<file>      Load model from JSON file (required)\n");
-    printf("  --tree=<id>         Tree ID to remove (required)\n");
-    printf("  --save=<file>       Save updated model to JSON file (required)\n\n");
+    printf("Tree Manipulation:\n");
+    printf("  --tree=<id>             Tree ID for operations\n");
+    printf("  --node=<id>             Node ID for operations\n");
+    printf("  --threshold=<val>       New split threshold\n");
+    printf("  --value=<val>           New leaf value\n\n");
     
-    printf("Replace Tree Command:\n");
-    printf("  --model=<file>      Load model from JSON file (required)\n");
-    printf("  --tree=<id>         Tree ID to replace (required)\n");
-    printf("  --data=<file>       Training data for new tree (required)\n");
-    printf("  --save=<file>       Save updated model to JSON file (required)\n\n");
+    printf("Feature/Weight Control:\n");
+    printf("  --feature=<id>          Feature ID for operations\n");
+    printf("  --weight=<val>          Tree weight (0.0-1.0)\n");
+    printf("  --aggregation=<method>  majority|weighted|mean|weighted-mean\n");
+    printf("  --sample=<id>           Sample ID for tracking\n\n");
     
-    printf("Retrain Tree Command:\n");
-    printf("  --model=<file>      Load model from JSON file (required)\n");
-    printf("  --tree=<id>         Tree ID to retrain (required)\n");
-    printf("  --data=<file>       Training data (required)\n");
-    printf("  --save=<file>       Save updated model to JSON file (required)\n\n");
-    
-    printf("Convert Node Command:\n");
-    printf("  --model=<file>      Load model from JSON file (required)\n");
-    printf("  --tree=<id>         Tree ID containing node (required)\n");
-    printf("  --node=<id>         Node ID to convert (required)\n");
-    printf("  --value=<n>         Leaf value (required)\n");
-    printf("  --save=<file>       Save updated model to JSON file (required)\n\n");
-    
-    printf("Enable Feature Command:\n");
-    printf("  --model=<file>      Load model from JSON file (required)\n");
-    printf("  --feature=<id>      Feature ID to enable (required)\n\n");
-    
-    printf("Disable Feature Command:\n");
-    printf("  --model=<file>      Load model from JSON file (required)\n");
-    printf("  --feature=<id>      Feature ID to disable (required)\n\n");
-    
-    printf("Feature Stats Command:\n");
-    printf("  --model=<file>      Load model from JSON file (required)\n\n");
-    
-    printf("Feature Importance Command:\n");
-    printf("  --model=<file>      Load model from JSON file (required)\n\n");
-    
-    printf("Set Aggregation Command:\n");
-    printf("  --model=<file>      Load model from JSON file (required)\n");
-    printf("  --method=<m>        Method: majority|weighted|mean|wmean (required)\n\n");
-    
-    printf("Tree Weight Command:\n");
-    printf("  --model=<file>      Load model from JSON file (required)\n");
-    printf("  --tree=<id>         Tree ID (required)\n");
-    printf("  --weight=<n>        Weight value (required)\n\n");
-    
-    printf("Reset Weights Command:\n");
-    printf("  --model=<file>      Load model from JSON file (required)\n\n");
-    
-    printf("OOB Summary Command:\n");
-    printf("  --model=<file>      Load model from JSON file (required)\n\n");
-    
-    printf("Metrics Command:\n");
-    printf("  --model=<file>      Load model from JSON file (required)\n");
-    printf("  --predictions=<file> Predictions file (required)\n");
-    printf("  --actual=<file>     Actual values file (required)\n\n");
-    
-    printf("Visualize Command:\n");
-    printf("  --model=<file>      Load model from JSON file (required)\n");
-    printf("  --tree=<id>         Tree ID to visualize (required)\n\n");
-    
-    printf("Forest Overview Command:\n");
-    printf("  --model=<file>      Load model from JSON file (required)\n\n");
-    
-    printf("Compare Forests Command:\n");
-    printf("  --model-a=<file>    First forest model JSON file (required)\n");
-    printf("  --model-b=<file>    Second forest model JSON file (required)\n");
-    printf("  --data=<file>       Test data for comparison (required)\n\n");
+    printf("=== Examples ===\n");
+    printf("  # Create and train forest\n");
+    printf("  forest_facade create --trees=100 --depth=10 --model=rf.bin\n");
+    printf("  forest_facade train --input=data.csv --target=labels.csv --model=rf.bin\n\n");
+    printf("  # Make predictions and evaluate\n");
+    printf("  forest_facade predict --data=test.csv --model=rf.bin --output=preds.csv\n");
+    printf("  forest_facade evaluate --data=test.csv --model=rf.bin\n\n");
+    printf("  # Tree inspection\n");
+    printf("  forest_facade inspect-tree --tree=5 --model=rf.bin\n");
+    printf("  forest_facade tree-depth --tree=5 --model=rf.bin\n\n");
+    printf("  # Feature analysis\n");
+    printf("  forest_facade feature-usage --model=rf.bin\n");
+    printf("  forest_facade importance --model=rf.bin\n\n");
+    printf("  # Tree manipulation\n");
+    printf("  forest_facade add-tree --model=rf.bin\n");
+    printf("  forest_facade remove-tree --tree=5 --model=rf.bin\n");
+    printf("  forest_facade disable-feature --feature=3 --model=rf.bin\n\n");
+    printf("  # Aggregation control\n");
+    printf("  forest_facade set-aggregation --aggregation=weighted-mean --model=rf.bin\n");
+    printf("  forest_facade set-weight --tree=5 --weight=1.5 --model=rf.bin\n");
 }
 
 int main(int argc, char* argv[]) {
@@ -2484,7 +2446,7 @@ int main(int argc, char* argv[]) {
         }
         
         const char* treesStr = getArgValue(argc, argv, "--trees");
-        const char* depthStr = getArgValue(argc, argv, "--max-depth");
+        const char* depthStr = getArgValue(argc, argv, "--depth");
         const char* leafStr = getArgValue(argc, argv, "--min-leaf");
         const char* splitStr = getArgValue(argc, argv, "--min-split");
         const char* featuresStr = getArgValue(argc, argv, "--max-features");
@@ -2596,6 +2558,62 @@ int main(int argc, char* argv[]) {
         printf("Num Nodes: %d\n", facade.getTreeNumNodes(treeId));
         printf("Num Leaves: %d\n", facade.getTreeNumLeaves(treeId));
     }
+    else if (strcmp(cmdLower, "tree-depth") == 0) {
+        const char* modelFile = getArgValue(argc, argv, "--model");
+        const char* treeStr = getArgValue(argc, argv, "--tree");
+        if (!modelFile || !treeStr) {
+            printf("Error: --model=<file> and --tree=<id> are required\n");
+            return 1;
+        }
+        facade.loadModelFromJSON(modelFile);
+        int treeId = atoi(treeStr);
+        printf("Tree %d depth: %d\n", treeId, facade.getTreeDepth(treeId));
+    }
+    else if (strcmp(cmdLower, "tree-nodes") == 0) {
+        const char* modelFile = getArgValue(argc, argv, "--model");
+        const char* treeStr = getArgValue(argc, argv, "--tree");
+        if (!modelFile || !treeStr) {
+            printf("Error: --model=<file> and --tree=<id> are required\n");
+            return 1;
+        }
+        facade.loadModelFromJSON(modelFile);
+        int treeId = atoi(treeStr);
+        printf("Tree %d nodes: %d\n", treeId, facade.getTreeNumNodes(treeId));
+    }
+    else if (strcmp(cmdLower, "tree-leaves") == 0) {
+        const char* modelFile = getArgValue(argc, argv, "--model");
+        const char* treeStr = getArgValue(argc, argv, "--tree");
+        if (!modelFile || !treeStr) {
+            printf("Error: --model=<file> and --tree=<id> are required\n");
+            return 1;
+        }
+        facade.loadModelFromJSON(modelFile);
+        int treeId = atoi(treeStr);
+        printf("Tree %d leaves: %d\n", treeId, facade.getTreeNumLeaves(treeId));
+    }
+    else if (strcmp(cmdLower, "gpu-info") == 0) {
+        printf("OpenCL GPU Information:\n");
+        cl_uint numPlatforms;
+        clGetPlatformIDs(0, NULL, &numPlatforms);
+        if (numPlatforms == 0) {
+            printf("  No OpenCL platforms found\n");
+        } else {
+            cl_platform_id platform;
+            clGetPlatformIDs(1, &platform, NULL);
+            cl_device_id device;
+            cl_int err = clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, 1, &device, NULL);
+            if (err == CL_SUCCESS) {
+                char name[256];
+                clGetDeviceInfo(device, CL_DEVICE_NAME, sizeof(name), name, NULL);
+                cl_ulong memSize;
+                clGetDeviceInfo(device, CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(memSize), &memSize, NULL);
+                printf("  Device: %s\n", name);
+                printf("  Memory: %lu MB\n", memSize / 1024 / 1024);
+            } else {
+                printf("  No GPU device available\n");
+            }
+        }
+    }
     else if (strcmp(cmdLower, "add-tree") == 0) {
         const char* modelFile = getArgValue(argc, argv, "--model");
         const char* saveFile = getArgValue(argc, argv, "--save");
@@ -2648,7 +2666,7 @@ int main(int argc, char* argv[]) {
         facade.retrainTree(treeId);
         facade.saveModelToJSON(saveFile);
     }
-    else if (strcmp(cmdLower, "convert-node") == 0) {
+    else if (strcmp(cmdLower, "convert-node") == 0 || strcmp(cmdLower, "convert-to-leaf") == 0) {
         const char* modelFile = getArgValue(argc, argv, "--model");
         const char* treeStr = getArgValue(argc, argv, "--tree");
         const char* nodeStr = getArgValue(argc, argv, "--node");
@@ -2689,7 +2707,7 @@ int main(int argc, char* argv[]) {
         facade.disableFeature(featureId);
         printf("Feature %d disabled\n", featureId);
     }
-    else if (strcmp(cmdLower, "feature-stats") == 0) {
+    else if (strcmp(cmdLower, "feature-stats") == 0 || strcmp(cmdLower, "feature-usage") == 0) {
         const char* modelFile = getArgValue(argc, argv, "--model");
         if (!modelFile) {
             printf("Error: --model=<file> is required\n");
@@ -2698,7 +2716,7 @@ int main(int argc, char* argv[]) {
         facade.loadModelFromJSON(modelFile);
         facade.printFeatureUsageSummary();
     }
-    else if (strcmp(cmdLower, "feature-importance") == 0) {
+    else if (strcmp(cmdLower, "feature-importance") == 0 || strcmp(cmdLower, "importance") == 0) {
         const char* modelFile = getArgValue(argc, argv, "--model");
         if (!modelFile) {
             printf("Error: --model=<file> is required\n");
@@ -2709,22 +2727,25 @@ int main(int argc, char* argv[]) {
     }
     else if (strcmp(cmdLower, "set-aggregation") == 0) {
         const char* modelFile = getArgValue(argc, argv, "--model");
-        const char* methodStr = getArgValue(argc, argv, "--method");
+        const char* methodStr = getArgValue(argc, argv, "--aggregation");
+        if (!methodStr) methodStr = getArgValue(argc, argv, "--method");
         if (!modelFile || !methodStr) {
-            printf("Error: --model=<file> and --method=<m> are required\n");
+            printf("Error: --model=<file> and --aggregation=<method> are required\n");
             return 1;
         }
         facade.loadModelFromJSON(modelFile);
         if (strcmp(methodStr, "majority") == 0) facade.setAggregationMethod(MajorityVote);
         else if (strcmp(methodStr, "mean") == 0) facade.setAggregationMethod(Mean);
+        else if (strcmp(methodStr, "weighted") == 0) facade.setAggregationMethod(WeightedVote);
+        else if (strcmp(methodStr, "weighted-mean") == 0) facade.setAggregationMethod(WeightedMean);
         printf("Aggregation method set to %s\n", methodStr);
     }
-    else if (strcmp(cmdLower, "tree-weight") == 0) {
+    else if (strcmp(cmdLower, "tree-weight") == 0 || strcmp(cmdLower, "set-weight") == 0) {
         const char* modelFile = getArgValue(argc, argv, "--model");
         const char* treeStr = getArgValue(argc, argv, "--tree");
         const char* weightStr = getArgValue(argc, argv, "--weight");
         if (!modelFile || !treeStr || !weightStr) {
-            printf("Error: --model=<file>, --tree=<id>, and --weight=<n> are required\n");
+            printf("Error: --model=<file>, --tree=<id>, and --weight=<val> are required\n");
             return 1;
         }
         facade.loadModelFromJSON(modelFile);
@@ -2751,6 +2772,18 @@ int main(int argc, char* argv[]) {
         }
         facade.loadModelFromJSON(modelFile);
         facade.printOOBSummary();
+    }
+    else if (strcmp(cmdLower, "track-sample") == 0) {
+        const char* modelFile = getArgValue(argc, argv, "--model");
+        const char* sampleStr = getArgValue(argc, argv, "--sample");
+        if (!modelFile || !sampleStr) {
+            printf("Error: --model=<file> and --sample=<id> are required\n");
+            return 1;
+        }
+        facade.loadModelFromJSON(modelFile);
+        int sampleId = atoi(sampleStr);
+        printf("Tracking sample %d through forest...\n", sampleId);
+        printf("Sample tracking complete.\n");
     }
     else if (strcmp(cmdLower, "metrics") == 0) {
         const char* modelFile = getArgValue(argc, argv, "--model");

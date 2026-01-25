@@ -1196,34 +1196,45 @@ bool TRandomForest::predictCSV(const char* inputFile, const char* outputFile, bo
 }
 
 void PrintHelp() {
-    std::cout << "Random Forest CUDA" << std::endl;
+    std::cout << "Random Forest CLI Tool (CUDA)" << std::endl;
     std::cout << "Matthew Abbott 2025" << std::endl;
+    std::cout << std::endl;
+    std::cout << "Usage: forest_cuda <command> [options]" << std::endl;
     std::cout << std::endl;
     std::cout << "Commands:" << std::endl;
     std::cout << "  create   Create a new random forest model" << std::endl;
-    std::cout << "  train    Train a random forest on data" << std::endl;
-    std::cout << "  predict  Make predictions on new data" << std::endl;
+    std::cout << "  train    Train a random forest model" << std::endl;
+    std::cout << "  predict  Make predictions with a trained model" << std::endl;
     std::cout << "  info     Display model information" << std::endl;
     std::cout << "  help     Show this help message" << std::endl;
     std::cout << std::endl;
-    std::cout << "Create Command:" << std::endl;
-    std::cout << "  forest_cuda create --save=model.bin [options]" << std::endl;
-    std::cout << "  Options:" << std::endl;
-    std::cout << "    --trees=N          Number of trees (default: 100)" << std::endl;
-    std::cout << "    --max-depth=N      Max tree depth (default: 10)" << std::endl;
-    std::cout << "    --min-leaf=N       Min samples per leaf (default: 1)" << std::endl;
-    std::cout << "    --min-split=N      Min samples to split (default: 2)" << std::endl;
-    std::cout << "    --max-features=N   Max features per split (default: sqrt(n))" << std::endl;
-    std::cout << "    --criterion=C      Split criterion: gini, entropy, mse (default: gini)" << std::endl;
-    std::cout << "    --task=T           Task type: classification, regression (default: classification)" << std::endl;
+    std::cout << "CREATE Options:" << std::endl;
+    std::cout << "  --trees=N          Number of trees (default: 100)" << std::endl;
+    std::cout << "  --max-depth=N      Maximum tree depth (default: 10)" << std::endl;
+    std::cout << "  --min-leaf=N       Minimum samples per leaf (default: 1)" << std::endl;
+    std::cout << "  --min-split=N      Minimum samples to split (default: 2)" << std::endl;
+    std::cout << "  --max-features=N   Maximum features per split (default: sqrt(n))" << std::endl;
+    std::cout << "  --criterion=C      Split criterion: gini, entropy, mse, variancereduction (default: gini)" << std::endl;
+    std::cout << "  --task=T           Task type: classification, regression (default: classification)" << std::endl;
+    std::cout << "  --save=FILE        Save model to file (required)" << std::endl;
     std::cout << std::endl;
-    std::cout << "Train Command:" << std::endl;
-    std::cout << "  forest_cuda train --model=model.bin --data=train.csv --save=trained.bin" << std::endl;
+    std::cout << "TRAIN Options:" << std::endl;
+    std::cout << "  --model=FILE       Model file to load (required)" << std::endl;
+    std::cout << "  --data=FILE        Training data CSV file (required)" << std::endl;
+    std::cout << "  --save=FILE        Save trained model to file (required)" << std::endl;
     std::cout << std::endl;
-    std::cout << "Predict Command:" << std::endl;
-    std::cout << "  forest_cuda predict --model=model.bin --data=test.csv --output=results.csv" << std::endl;
+    std::cout << "PREDICT Options:" << std::endl;
+    std::cout << "  --model=FILE       Model file to load (required)" << std::endl;
+    std::cout << "  --data=FILE        Data file for predictions (required)" << std::endl;
+    std::cout << "  --output=FILE      Save predictions to file (optional)" << std::endl;
     std::cout << std::endl;
-    std::cout << "Info Command:" << std::endl;
+    std::cout << "INFO Options:" << std::endl;
+    std::cout << "  --model=FILE       Model file to inspect (required)" << std::endl;
+    std::cout << std::endl;
+    std::cout << "Examples:" << std::endl;
+    std::cout << "  forest_cuda create --trees=50 --max-depth=15 --save=model.bin" << std::endl;
+    std::cout << "  forest_cuda train --model=model.bin --data=train.csv --save=model_trained.bin" << std::endl;
+    std::cout << "  forest_cuda predict --model=model_trained.bin --data=test.csv --output=predictions.csv" << std::endl;
     std::cout << "  forest_cuda info --model=model_trained.bin" << std::endl;
 }
 
